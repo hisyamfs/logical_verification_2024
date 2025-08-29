@@ -26,35 +26,55 @@ Section 3.3 in the Hitchhiker's Guide. -/
 
 theorem I (a : Prop) :
   a → a :=
-  sorry
+  by
+    intro ha
+    exact ha
 
 theorem K (a b : Prop) :
   a → b → b :=
-  sorry
+  by
+    intro
+    intro hb
+    exact hb
 
 theorem C (a b c : Prop) :
   (a → b → c) → b → a → c :=
-  sorry
+  by
+    intro hab hb ha
+    apply hab
+    apply ha
+    exact hb
 
 theorem proj_fst (a : Prop) :
   a → a → a :=
-  sorry
+  by
+    intro ha1 ha2
+    exact ha1
 
 /- Please give a different answer than for `proj_fst`: -/
 
 theorem proj_snd (a : Prop) :
   a → a → a :=
-  sorry
+  by
+    intro ha1 ha2
+    exact ha2
 
 theorem some_nonsense (a b c : Prop) :
   (a → b → c) → a → (a → c) → b → c :=
-  sorry
+  by
+    intro hab ha hha hb
+    apply hha
+    exact ha
 
 /- 1.2. Prove the contraposition rule using basic tactics. -/
 
 theorem contrapositive (a b : Prop) :
   (a → b) → ¬ b → ¬ a :=
-  sorry
+  by
+    intro hha hnb
+    intro ha
+    apply hnb
+    exact (hha ha)
 
 /- 1.3. Prove the distributivity of `∀` over `∧` using basic tactics.
 
