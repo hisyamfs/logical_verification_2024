@@ -84,7 +84,20 @@ be necessary. -/
 
 theorem forall_and {α : Type} (p q : α → Prop) :
   (∀x, p x ∧ q x) ↔ (∀x, p x) ∧ (∀x, q x) :=
-  sorry
+  by
+    apply Iff.intro
+    -- case mp
+    { intro h_pq
+      apply And.intro
+      { intro hx
+        exact And.left (h_pq hx) }
+      { intro hx
+        exact And.right (h_pq hx)} }
+    -- case mpr
+    { apply And.elim
+      intro hp hq
+      intro hx
+      exact And.intro (hp hx) (hq hx) }
 
 
 /- ## Question 2: Natural Numbers
@@ -96,23 +109,43 @@ theorem forall_and {α : Type} (p q : α → Prop) :
 
 theorem mul_zero (n : ℕ) :
   mul 0 n = 0 :=
-  sorry
+  by
+    induction n with
+    | zero        => rfl
+    | succ n' ih  => simp [mul, ih]; rfl
 
 #check add_succ
+
 theorem mul_succ (m n : ℕ) :
   mul (Nat.succ m) n = add (mul m n) n :=
-  sorry
+  by
+    induction n with
+    | zero => rfl
+    | succ n' ih =>
+      simp [mul, add, add_assoc, add_succ, ih]
 
 /- 2.2. Prove commutativity and associativity of multiplication using the
 `induction` tactic. Choose the induction variable carefully. -/
 
 theorem mul_comm (m n : ℕ) :
   mul m n = mul n m :=
-  sorry
+  by
+    induction n with
+    | zero =>
+      simp [mul, mul_zero]
+    | succ n' ih =>
+      simp [mul, mul_succ, add_comm, ih]
+      -- simp [ih, mul, mul_succ, add_comm]
+      -- simp [mul, mul_succ, add_comm, ih]
 
 theorem mul_assoc (l m n : ℕ) :
   mul (mul l m) n = mul l (mul m n) :=
-  sorry
+  by
+    induction n with
+    | zero =>
+      rfl
+    | succ n' ih =>
+      simp [mul, mul_add, ih]
 
 /- 2.3. Prove the symmetric variant of `mul_add` using `rw`. To apply
 commutativity at a specific position, instantiate the rule by passing some
@@ -120,7 +153,17 @@ arguments (e.g., `mul_comm _ l`). -/
 
 theorem add_mul (l m n : ℕ) :
   mul (add l m) n = add (mul n l) (mul n m) :=
-  sorry
+  by
+    induction n with
+    | zero =>
+      rw [mul_comm, mul_zero]
+      apply Eq.symm
+      rw [mul_zero, mul_zero]
+      rfl
+    | succ n' ih =>
+      rw [mul_comm, mul_succ, mul_comm, ih, add_assoc]
+      apply Eq.symm
+      rw [mul_succ, mul_succ, add_assoc, add_comm l _, add_assoc, add_comm m]
 
 
 /- ## Question 3 (**optional**): Intuitionistic Logic
@@ -147,9 +190,37 @@ Hint: You will need `Or.elim` and `False.elim`. You can use
 `rw [ExcludedMiddle]` to unfold the definition of `ExcludedMiddle`,
 and similarly for `Peirce`. -/
 
+/--
+  Gagal paham, tapi yaudah lah ya
+-/
 theorem Peirce_of_EM :
   ExcludedMiddle → Peirce :=
-  sorry
+  by
+    rw [ExcludedMiddle, Peirce]
+
+    intro h_em h_a h_b h_peirce
+
+    have h_em_a := h_em h_a
+    have h_em_b := h_em h_b
+
+    apply Or.elim h_em_a
+    . intro hh_a
+      exact hh_a
+    . intro hh_na
+      apply Or.elim h_em_b
+      . intro hh_b
+        apply False.elim
+        apply hh_na
+        apply h_peirce
+        intro
+        exact hh_b
+      . intro
+        apply h_peirce
+        intro hh_a
+        apply False.elim
+        apply hh_na
+        exact hh_a
+
 
 /- 3.2 (**optional**). Prove the following implication using tactics. -/
 
