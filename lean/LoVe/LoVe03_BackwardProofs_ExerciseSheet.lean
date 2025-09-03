@@ -224,9 +224,24 @@ theorem Peirce_of_EM :
 
 /- 3.2 (**optional**). Prove the following implication using tactics. -/
 
+opaque p: Prop
+
+#check ¬¬p
+
+-- WTF??
 theorem DN_of_Peirce :
   Peirce → DoubleNegation :=
-  sorry
+  by
+    rw [Peirce, DoubleNegation]
+
+    intro h_peirce h_a h_nn
+
+    have peirce := h_peirce h_a False
+
+    apply peirce
+    intro h_na
+
+    exact False.elim (h_nn h_na)
 
 /- We leave the remaining implication for the homework: -/
 
@@ -234,7 +249,24 @@ namespace SorryTheorems
 
 theorem EM_of_DN :
   DoubleNegation → ExcludedMiddle :=
-sorry
+  by
+    rw [DoubleNegation, ExcludedMiddle]
+
+    intro dn
+    intro p
+
+    apply dn
+    intro hne
+
+    have hnp: ¬p := by
+      intro hp
+      apply hne
+      exact Or.inl hp
+
+    have pornp: p ∨ ¬p :=
+      Or.inr hnp
+
+    exact hne pornp
 
 end SorryTheorems
 
