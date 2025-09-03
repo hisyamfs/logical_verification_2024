@@ -29,25 +29,64 @@ Section 3.3 in the Hitchhiker's Guide. -/
 
 theorem B (a b c : Prop) :
   (a → b) → (c → a) → c → b :=
-  sorry
+  by
+    intro hab
+    intro hca
+    intro hc
+
+    apply hab
+    apply hca
+
+    exact hc
 
 theorem S (a b c : Prop) :
   (a → b → c) → (a → b) → a → c :=
-  sorry
+  by
+    intro habc
+    intro hab
+    intro ha
+
+    apply habc
+
+    exact ha
+    apply hab
+    exact ha
 
 theorem more_nonsense (a b c d : Prop) :
   ((a → b) → c → d) → c → b → d :=
-  sorry
+  by
+    intro h_ab_c_d
+    intro h_c
+    intro h_b
+
+    apply h_ab_c_d
+    intro _
+
+    exact h_b
+    exact h_c
 
 theorem even_more_nonsense (a b c : Prop) :
   (a → b) → (a → c) → a → b → c :=
-  sorry
+  by
+    intro h_ab h_ac h_a h_b
+
+    apply h_ac
+    exact h_a
 
 /- 1.2 (1 point). Prove the following theorem using basic tactics. -/
 
 theorem weak_peirce (a b : Prop) :
   ((((a → b) → a) → a) → b) → b :=
-  sorry
+  by
+    intro h₁
+    apply h₁
+
+    intro h₂
+    apply h₂
+
+    intro h₃
+
+    apply h₁ (fun _ => h₃)
 
 
 /- ## Question 2 (5 points): Logical Connectives
@@ -65,7 +104,19 @@ Hints:
 
 theorem herman (a : Prop) :
   ¬¬ (¬¬ a → a) :=
-  sorry
+  by
+    rw [Not, Not, Not, Not]
+
+    intro h₁
+    apply h₁
+    intro h₂
+
+    apply False.elim
+    apply h₂
+
+    intro h₃
+
+    exact h₁ (fun _ => h₃)
 
 /- 2.2 (2 points). Prove the missing link in our chain of classical axiom
 implications.
@@ -90,7 +141,24 @@ Hints:
 
 theorem EM_of_DN :
   DoubleNegation → ExcludedMiddle :=
-  sorry
+  by
+    rw [DoubleNegation, ExcludedMiddle]
+
+    intro dn
+    intro p
+
+    apply dn
+    intro hne
+
+    have hnp: ¬p := by
+      intro hp
+      apply hne
+      exact Or.inl hp
+
+    have pornp: p ∨ ¬p :=
+      Or.inr hnp
+
+    exact hne pornp
 
 /- 2.3 (2 points). We have proved three of the six possible implications
 between `ExcludedMiddle`, `Peirce`, and `DoubleNegation`. State and prove the
