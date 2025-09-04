@@ -19,48 +19,117 @@ namespace LoVe
 
 theorem I (a : Prop) :
   a → a :=
-  sorry
+  assume ha: a
+
+  show a from ha
 
 theorem K (a b : Prop) :
   a → b → b :=
-  sorry
+
+  assume ha: a
+  assume hb: b
+
+  show b from
+    hb
 
 theorem C (a b c : Prop) :
   (a → b → c) → b → a → c :=
-  sorry
+
+  assume h_abc: a → b → c
+  assume h_b: b
+  assume h_a: a
+
+  show c from
+    h_abc h_a h_b
 
 theorem proj_fst (a : Prop) :
   a → a → a :=
-  sorry
+
+  assume ha: a
+  assume ha2: a
+
+  show a from ha
 
 /- Please give a different answer than for `proj_fst`. -/
 
 theorem proj_snd (a : Prop) :
   a → a → a :=
-  sorry
+
+  assume ha: a
+  assume ha2: a
+
+  show a from ha2
 
 theorem some_nonsense (a b c : Prop) :
   (a → b → c) → a → (a → c) → b → c :=
-  sorry
+
+  assume h_abc : a -> b -> c
+  assume h_a : a
+  assume h_ac : a -> c
+  assume h_b : b
+
+  show c from
+    h_abc h_a h_b
 
 /- 1.2. Supply a structured proof of the contraposition rule. -/
 
 theorem contrapositive (a b : Prop) :
   (a → b) → ¬ b → ¬ a :=
-  sorry
+
+  assume h_ab : a -> b
+  assume h_nb : ¬ b
+
+  assume h_a : a
+
+  show False from
+    have h_b := h_ab h_a
+    h_nb h_b
 
 /- 1.3. Supply a structured proof of the distributivity of `∀` over `∧`. -/
 
 theorem forall_and {α : Type} (p q : α → Prop) :
   (∀x, p x ∧ q x) ↔ (∀x, p x) ∧ (∀x, q x) :=
-  sorry
+
+  have h_nec: (∀x, p x ∧ q x) -> (∀x, p x) ∧ (∀x, q x) :=
+    assume h_pnq: ∀x, p x ∧ q x
+    show (∀x, p x) ∧ (∀x, q x) from
+      have h_p: ∀x, p x :=
+        fix x: α
+        And.left (h_pnq x)
+
+      have h_q: ∀x, q x :=
+        fix x: α
+        And.right (h_pnq x)
+
+      And.intro h_p h_q
+
+  have h_suf: (∀x, p x) ∧ (∀x, q x) -> (∀x, p x ∧ q x) :=
+    assume hp_hq: (∀x, p x) ∧ (∀x, q x)
+    show (∀x, p x ∧ q x) from
+      have h_p := And.left hp_hq
+      have h_q := And.right hp_hq
+
+      fix x : α
+      And.intro (h_p x) (h_q x)
+
+  Iff.intro h_nec h_suf
 
 /- 1.4 (**optional**). Supply a structured proof of the following property,
 which can be used to pull a `∀` quantifier past an `∃` quantifier. -/
 
 theorem forall_exists_of_exists_forall {α : Type} (p : α → α → Prop) :
   (∃x, ∀y, p x y) → (∀y, ∃x, p x y) :=
-  sorry
+  -- fun h y' =>
+  --   match h with
+  --   | ⟨x, h⟩ => ⟨x, h y'⟩
+  assume h: ∃x, ∀y, p x y
+  fix y': α
+
+  Exists.elim h (
+    fix ex: α
+    assume hxx : ∀ (y: α), p ex y
+    Exists.intro ex (hxx y')
+  )
 
 
 /- ## Question 2: Chain of Equalities
