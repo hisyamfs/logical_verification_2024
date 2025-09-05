@@ -81,9 +81,9 @@ theorem contrapositive (a b : Prop) :
 
   assume h_a : a
 
-  show False from
-    have h_b := h_ab h_a
-    h_nb h_b
+  -- show False from
+  have h_b := h_ab h_a
+  h_nb h_b
 
 /- 1.3. Supply a structured proof of the distributivity of `∀` over `∧`. -/
 
@@ -148,7 +148,14 @@ Hint: This is a difficult question. You might need the tactics `simp` and
 
 theorem binomial_square (a b : ℕ) :
   (a + b) * (a + b) = a * a + 2 * a * b + b * b :=
-  sorry
+  calc
+    (a + b) * (a + b) = a * (a + b) + b * (a + b) := by
+      rw [add_mul]
+    _ = a * a + a * b + b * a + b * b := by
+      rw [mul_add, mul_add, ← add_assoc]
+    _ = a * a + 2 * a * b + b * b := by
+      rw [mul_comm b _, add_comm, add_assoc, ← Nat.two_mul (a * b), ← add_assoc]
+      ac_rfl
 
 /- 2.2 (**optional**). Prove the same argument again, this time as a structured
 proof, with `have` steps corresponding to the `calc` equations. Try to reuse as
@@ -156,6 +163,7 @@ much of the above proof idea as possible, proceeding mechanically. -/
 
 theorem binomial_square₂ (a b : ℕ) :
   (a + b) * (a + b) = a * a + 2 * a * b + b * b :=
+  -- MALAS
   sorry
 
 
@@ -167,9 +175,41 @@ rule for `∀` is inconsistent, using a structured proof. -/
 axiom All.one_point_wrong {α : Type} (t : α) (P : α → Prop) :
   (∀x : α, x = t ∧ P x) ↔ P t
 
+lemma All.one_point_wrong_contradiction:
+  ∀ (α : Type) (t : α) (P : α → Prop),
+  (∃ x, ¬x = t) → ¬(∀ (x : α), x = t ∧ P x)
+:=
+  assume α: Type
+  assume t: α
+  assume P: α -> Prop
+
+  assume h_non_ex: ∃x: α, ¬(x = t)
+  assume h_absurd: (∀x : α, x = t ∧ P x)
+
+  Exists.elim h_non_ex (
+    fix x: α
+    assume h_x :  ¬(x = t)
+
+    have h_absurd_x := h_absurd x
+    have h_eq_x := h_absurd_x.left
+
+    h_x h_eq_x
+  )
+
 theorem All.proof_of_False :
-  False :=
-  sorry
+  False
+:=
+  let top : Bool -> Prop := fun _ => True
+  have h := All.one_point_wrong true top
+  have h_suf := h.mpr
+  have h_eq: top true := by simp
+  have h_x := h_suf h_eq false
+  have h_x_absurd := h_x.left
+
+  have is_absurd: False := by
+    simp at h_x_absurd
+
+  is_absurd
 
 /- 3.2 (**optional**). Prove that the following wrong formulation of the
 one-point rule for `∃` is inconsistent, using a structured proof. -/

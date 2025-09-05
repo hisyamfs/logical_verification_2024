@@ -40,14 +40,39 @@ Hint: There is an easy way. -/
 
 theorem about_Impl_term :
   ∀a b : Prop, ¬ a ∨ b → a → b :=
-  sorry
+  fix a: Prop
+  fix b: Prop
+
+  assume h₁ : ¬ a ∨ b
+  assume h₂ : a
+
+  Or.elim h₁
+    ( assume h_na: ¬ a
+
+      have h_f := h_na h₂
+      False.elim h_f )
+    ( assume h_b: b
+      h_b )
+
 
 /- 1.2 (2 points). Prove the same theorem again, this time by providing a
 structured proof, with `fix`, `assume`, and `show`. -/
 
 theorem about_Impl_struct :
   ∀a b : Prop, ¬ a ∨ b → a → b :=
-  sorry
+  fix a: Prop
+  fix b: Prop
+
+  assume h₁ : ¬ a ∨ b
+  assume h₂ : a
+
+  Or.elim h₁
+    ( assume h_na: ¬ a
+
+      have h_f := h_na h₂
+      False.elim h_f )
+    ( assume h_b: b
+      h_b )
 
 
 /- ## Question 2 (6 points): Connectives and Quantifiers
@@ -58,7 +83,35 @@ rules for `∀`, `∨`, and `↔`. -/
 
 theorem Or_comm_under_All {α : Type} (p q : α → Prop) :
   (∀x, p x ∨ q x) ↔ (∀x, q x ∨ p x) :=
-  sorry
+
+  have h_nec : (∀x, p x ∨ q x) → (∀x, q x ∨ p x) :=
+    assume h: ∀x, p x ∨ q x
+
+    fix x': α
+
+    have h_pq: p x' ∨ q x' := h x'
+
+    Or.elim h_pq
+      ( assume h_p: p x'
+        Or.inr h_p )
+      ( assume h_q: q x'
+        Or.inl h_q )
+
+  have h_suf : (∀x, q x ∨ p x) → (∀x, p x ∨ q x) :=
+    assume h: (∀x, q x ∨ p x)
+
+    fix x': α
+
+    have h_qp : q x' ∨ p x' :=
+      h x'
+
+    Or.elim h_qp
+      ( assume h_q: q x'
+        Or.inr h_q )
+      ( assume h_p: p x'
+        Or.inl h_p )
+
+  Iff.intro h_nec h_suf
 
 /- 2.2 (3 points). We have proved or stated three of the six possible
 implications between `ExcludedMiddle`, `Peirce`, and `DoubleNegation` in the
@@ -73,15 +126,29 @@ namespace BackwardProofs
 
 theorem Peirce_of_DN :
   DoubleNegation → Peirce :=
-  sorry
+  assume dn: DoubleNegation
+
+  have em: ExcludedMiddle := SorryTheorems.EM_of_DN dn
+
+  Peirce_of_EM em
 
 theorem EM_of_Peirce :
   Peirce → ExcludedMiddle :=
-  sorry
+
+  assume p: Peirce
+
+  have dn: DoubleNegation := DN_of_Peirce p
+
+  SorryTheorems.EM_of_DN dn
 
 theorem dn_of_em :
   ExcludedMiddle → DoubleNegation :=
-  sorry
+
+  assume em: ExcludedMiddle
+
+  have p: Peirce := Peirce_of_EM em
+
+  DN_of_Peirce p
 
 end BackwardProofs
 
