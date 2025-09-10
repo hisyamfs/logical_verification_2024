@@ -124,7 +124,10 @@ To avoid unpleasant surprises in the proofs, we recommend that you follow the
 same recursion pattern as for `drop` above. -/
 
 def take {α : Type} : ℕ → List α → List α :=
-  sorry
+  fun n ls => match n, ls with
+  | 0,      _       => []
+  | _ + 1,  []      => []
+  | m + 1,  x :: xs => x :: take m xs
 
 #eval take 0 [3, 7, 11]   -- expected: []
 #eval take 1 [3, 7, 11]   -- expected: [3]
@@ -140,11 +143,22 @@ attribute. -/
 
 @[simp] theorem drop_nil {α : Type} :
   ∀n : ℕ, drop n ([] : List α) = [] :=
-  sorry
+by
+  intro n
+
+  induction n with
+  | zero => rfl
+  | succ _ _ =>rfl
+
 
 @[simp] theorem take_nil {α : Type} :
   ∀n : ℕ, take n ([] : List α) = [] :=
-  sorry
+by
+  intro n
+
+  induction n with
+  | zero => rfl
+  | succ _ _ => rfl
 
 /- 2.3. Follow the recursion pattern of `drop` and `take` to prove the
 following theorems. In other words, for each theorem, there should be three
@@ -155,8 +169,38 @@ two arguments to `drop`). For the third case, `← add_assoc` might be useful. -
 
 theorem drop_drop {α : Type} :
   ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
-  | 0,     n, xs      => by rfl
-  -- supply the two missing cases here
+  | 0, n, xs => by rfl
+  | m, 0, xs => by simp; rfl
+  | m'+1, n', xs => by
+    -- Induction Hypothesis:
+    -- Forall h_n: N, h_ls: List α ,
+    --    drop h_n (drop n' h_ls) = drop (n' + h_n) h_ls
+    have h_ih := fun (h_n: ℕ) (h_ls: List α) => drop_drop m' h_n h_ls
+
+    have h_drop_comm:
+      ∀(m n: ℕ) (xs: List α), drop n (drop m xs) = drop m (drop n xs) := by sorry
+
+    have h_m_1_comm:
+      drop (m' + 1) xs = drop m' (drop 1 xs) := by
+      have hh := h_ih 1 xs
+      rw [add_comm, h_drop_comm]
+      apply Eq.symm
+      assumption
+
+    rw [h_m_1_comm]
+
+    have ih₁ :=
+      h_ih (n'+1) xs
+
+    have h_n_1_comm:
+      drop (n' + 1) (drop m' xs) = drop n' (drop 1 (drop m' xs)) := by
+
+      rw [h_drop_comm 1, h_drop_comm m']
+
+      sorry
+
+    rw [add_comm _ 1, ← add_assoc, ← ih₁, h_n_1_comm]
+    rw [h_drop_comm 1 m']
 
 theorem take_take {α : Type} :
   ∀(m : ℕ) (xs : List α), take m (take m xs) = take m xs :=
