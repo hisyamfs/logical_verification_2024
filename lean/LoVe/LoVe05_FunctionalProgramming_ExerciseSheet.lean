@@ -167,40 +167,56 @@ cases, and the third case will need to invoke the induction hypothesis.
 Hint: Note that there are three variables in the `drop_drop` theorem (but only
 two arguments to `drop`). For the third case, `← add_assoc` might be useful. -/
 
+#check Ord
+
+lemma h_drop_comm {α: Type}:
+  ∀(m n: ℕ) (xs: List α),
+  drop n (drop m xs) = drop m (drop n xs) :=
+  sorry
+
 theorem drop_drop {α : Type} :
   ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
   | 0, n, xs => by rfl
   | m, 0, xs => by simp; rfl
-  | m'+1, n', xs => by
+  | m', n'+1, xs => by
     -- Induction Hypothesis:
-    -- Forall h_n: N, h_ls: List α ,
+    -- Forall h_m: N // h_m <= m', h_n: N, h_ls: List α ,
     --    drop h_n (drop n' h_ls) = drop (n' + h_n) h_ls
-    have h_ih := fun (h_n: ℕ) (h_ls: List α) => drop_drop m' h_n h_ls
+    -- have h_ih := fun (h_n: ℕ) (h_ls: List α) => drop_drop m' h_n h_ls
+    have ih:
+      ∀(m n: ℕ) (xs: List α),
+      n < n'+1 → drop n (drop m xs) = drop (n + m) xs :=
+      fun m n xs h =>
+        drop_drop m n xs
 
-    have h_drop_comm:
-      ∀(m n: ℕ) (xs: List α), drop n (drop m xs) = drop m (drop n xs) := by sorry
+    have cmp_m_n := Classical.em (m' < n'+1)
+    apply Or.elim cmp_m_n
+    . intro m_lt_np
+      have h := ih (n'+1) m' xs (m_lt_np)
+      simp [h_drop_comm, ← add_assoc, add_comm, h]
+    . intro m_gte_np
+      simp at m_gte_np
+      have m_ge_1: 1 ≤ m' := sorry
 
-    have h_m_1_comm:
-      drop (m' + 1) xs = drop m' (drop 1 xs) := by
-      have hh := h_ih 1 xs
-      rw [add_comm, h_drop_comm]
-      apply Eq.symm
-      assumption
+      have ih_n := fun xs => ih 1 n' xs (by simp)
 
-    rw [h_m_1_comm]
-
-    have ih₁ :=
-      h_ih (n'+1) xs
-
-    have h_n_1_comm:
-      drop (n' + 1) (drop m' xs) = drop n' (drop 1 (drop m' xs)) := by
-
-      rw [h_drop_comm 1, h_drop_comm m']
+      have m_cases := Nat.lt_or_eq_of_le m_ge_1
 
       sorry
+      -- apply Or.elim m_cases
+      -- . intro m_cases_1
+      --   have ih_m := ih_n (drop m' xs)
+      --   have ih_1_m := ih (m'+1) n' xs (by simp)
+      --   rw [← ih_m]
+      -- . sorry
 
-    rw [add_comm _ 1, ← add_assoc, ← ih₁, h_n_1_comm]
-    rw [h_drop_comm 1 m']
+theorem drop_drop_2 {α : Type} :
+  ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
+  | 0, n, xs => by simp [drop]
+  | _, n, [] => by simp [drop]
+  | m+1, n, _::xs =>
+    have IH := drop_drop m n xs
+    by simp [drop, IH]
 
 theorem take_take {α : Type} :
   ∀(m : ℕ) (xs : List α), take m (take m xs) = take m xs :=
