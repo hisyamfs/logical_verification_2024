@@ -174,6 +174,12 @@ lemma h_drop_comm {α: Type}:
   drop n (drop m xs) = drop m (drop n xs) :=
   sorry
 
+lemma drop_1 {α: Type}:
+  ∀(m: ℕ) (xs: List α), drop 1 (drop m xs) = drop (1 + m) xs
+  | 0, xs => by rfl
+  | _, [] => by simp
+  | m+1, _::xs => drop_1 m xs
+
 theorem drop_drop {α : Type} :
   ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
   | 0, n, xs => by rfl
@@ -186,29 +192,28 @@ theorem drop_drop {α : Type} :
     have ih:
       ∀(m n: ℕ) (xs: List α),
       n < n'+1 → drop n (drop m xs) = drop (n + m) xs :=
-      fun m n xs h =>
+      fun m n xs _ =>
         drop_drop m n xs
 
-    have cmp_m_n := Classical.em (m' < n'+1)
-    apply Or.elim cmp_m_n
-    . intro m_lt_np
-      have h := ih (n'+1) m' xs (m_lt_np)
-      simp [h_drop_comm, ← add_assoc, add_comm, h]
-    . intro m_gte_np
-      simp at m_gte_np
-      have m_ge_1: 1 ≤ m' := sorry
+    have h_m_1: drop 1 (drop m' xs) = drop (1 + m') xs :=
+      drop_1 m' xs
 
-      have ih_n := fun xs => ih 1 n' xs (by simp)
+    have h_simp := calc
+      drop (n' + 1) (drop m' xs) = drop n' (drop 1 (drop m' xs)) := by
+        apply Eq.symm
+        exact ih 1 n' (drop m' xs) (by simp)
 
-      have m_cases := Nat.lt_or_eq_of_le m_ge_1
+      _ = drop n' (drop (1 + m') xs) := by
+        rw [h_m_1]
 
-      sorry
-      -- apply Or.elim m_cases
-      -- . intro m_cases_1
-      --   have ih_m := ih_n (drop m' xs)
-      --   have ih_1_m := ih (m'+1) n' xs (by simp)
-      --   rw [← ih_m]
-      -- . sorry
+      _ = drop (n' + 1 + m') xs := by
+        have h := ih (1 + m') n' xs (by simp)
+        rw [add_assoc]
+
+        exact h
+
+    exact h_simp
+
 
 theorem drop_drop_2 {α : Type} :
   ∀(m n : ℕ) (xs : List α), drop n (drop m xs) = drop (n + m) xs
@@ -219,13 +224,20 @@ theorem drop_drop_2 {α : Type} :
     by simp [drop, IH]
 
 theorem take_take {α : Type} :
-  ∀(m : ℕ) (xs : List α), take m (take m xs) = take m xs :=
-  sorry
+  ∀(m : ℕ) (xs : List α), take m (take m xs) = take m xs
+  | 0, _ => by simp [take]
+  | _, [] => by simp [take]
+  | m+1, _ :: xs => by
+    have ih := take_take m xs
+    simp [take, ih]
 
 theorem take_drop {α : Type} :
-  ∀(n : ℕ) (xs : List α), take n xs ++ drop n xs = xs :=
-  sorry
-
+  ∀(n : ℕ) (xs : List α), take n xs ++ drop n xs = xs
+  | 0, _ => by rfl
+  | _, [] => by simp
+  | n+1, x::xs => by
+    have ih := take_drop n xs
+    simp [take, drop, ih]
 
 /- ## Question 3: A Type of Terms
 
@@ -237,13 +249,20 @@ theorem take_drop {α : Type} :
             |  `app` Term Term     -- application (e.g., `t u`) -/
 
 -- enter your definition here
+inductive Term: Type where
+| var: String -> Term
+| lam: String -> Term -> Term
+| app: Term -> Term -> Term
 
 /- 3.2 (**optional**). Register a textual representation of the type `term` as
 an instance of the `Repr` type class. Make sure to supply enough parentheses to
 guarantee that the output is unambiguous. -/
 
 def Term.repr : Term → String
--- enter your answer here
+| var x => x
+| lam x t => "(λ" ++ x ++ ". " ++ repr t ++ ")"
+| app t u => "(" ++ repr t ++ " " ++ repr u ++ ")"
+
 
 instance Term.Repr : Repr Term :=
   { reprPrec := fun t prec ↦ Term.repr t }
